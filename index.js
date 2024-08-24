@@ -19,7 +19,7 @@
 
 //  #region 检查是否有本地数据，没有则初始化
 (() => {
-  if (GM_getValue("selectedCoursesList") == undefined) {
+  if (!(GM_getValue("selectedCoursesList", {src: undefined}).src instanceof Array)) {
     GM_setValue("selectedCoursesList", { src: [] });
   }
 })();
@@ -47,7 +47,7 @@ const request = (obj) => {
 };
 
 (function () {
-//   var url = window.location.href;
+  //   var url = window.location.href;
   // =====================
   // #region 监听 my/courses 页面变化
   const targetNode = document.getElementById("page-content");
@@ -103,7 +103,7 @@ const request = (obj) => {
 
     // 删掉所有 Button
     (() => {
-      let allButtons = document.getElementsByClassName("MoodleHelper");
+      let allButtons = document.getElementsByClassName("moodle-helper");
       for (let i = allButtons.length - 1; i >= 0; i--) {
         allButtons[i].remove();
       }
@@ -181,7 +181,7 @@ const request = (obj) => {
   function initButtonAction(coursePageList) {
     observer.disconnect(); // 不观测，防止递归
     // 获取所有按钮
-    let allButtons = document.getElementsByClassName("MoodleHelper");
+    let allButtons = document.getElementsByClassName("moodle-helper");
     let selectedCoursesList = GM_getValue("selectedCoursesList", {
       src: [],
     }).src;
