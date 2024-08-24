@@ -17,7 +17,13 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
-GM_setValue("selectedCoursesList", {src: []});
+//  #region 检查是否有本地数据，没有则初始化
+(() => {
+  if (GM_getValue("selectedCoursesList") == undefined) {
+    GM_setValue("selectedCoursesList", { src: [] });
+  }
+})();
+// #endregion
 
 const request = (obj) => {
   return new Promise((resolve, reject) => {
@@ -41,6 +47,7 @@ const request = (obj) => {
 };
 
 (function () {
+//   var url = window.location.href;
   // =====================
   // #region 监听 my/courses 页面变化
   const targetNode = document.getElementById("page-content");
@@ -88,7 +95,9 @@ const request = (obj) => {
   function initButton(coursePageList) {
     observer.disconnect(); // 不观测，防止递归
     // 提取已选课程列表
-    let selectedCoursesList = GM_getValue("selectedCoursesList", {src: []}).src;
+    let selectedCoursesList = GM_getValue("selectedCoursesList", {
+      src: [],
+    }).src;
     console.log("Selected Courses List: ");
     console.log(selectedCoursesList);
 
@@ -143,17 +152,19 @@ const request = (obj) => {
         // 初始化按钮
         let newButton = document.createElement("button");
         newButton.id = `course${currentCourseId}`;
-        newButton.classList.add("MoodleHelper");
+        newButton.classList.add("moodle-helper");
         newButton.relatedCourseId = currentCourseId;
 
         if (initState) {
           if (hasBeenAdded) {
             newButton.textContent = "Remove from this semester";
             newButton.action = "to-remove";
+            newButton.classList.add("helper-remove-button");
             displayedInfo.appendChild(newButton);
           } else {
             newButton.textContent = "Add to this semester";
             newButton.action = "to-add";
+            newButton.classList.add("helper-add-button");
             displayedInfo.appendChild(newButton);
           }
           currentPage[i].initComplete = true;
@@ -171,16 +182,22 @@ const request = (obj) => {
     observer.disconnect(); // 不观测，防止递归
     // 获取所有按钮
     let allButtons = document.getElementsByClassName("MoodleHelper");
-    let selectedCoursesList = GM_getValue("selectedCoursesList", {src: []}).src;
+    let selectedCoursesList = GM_getValue("selectedCoursesList", {
+      src: [],
+    }).src;
 
     for (let i = 0; i < allButtons.length; i++) {
       allButtons[i].addEventListener("click", function () {
         if (this.action == "to-add") {
           addToSemester(this.relatedCourseId, selectedCoursesList);
+          this.classList.remove("helper-add-button");
+          this.classList.add("helper-remove-button");
           this.textContent = "Remove from this semester";
           this.action = "to-remove";
         } else if (this.action == "to-remove") {
           removeFromSem(this.relatedCourseId, selectedCoursesList);
+          this.classList.remove("helper-remove-button");
+          this.classList.add("helper-add-button");
           this.textContent = "Add to this semester";
           this.action = "to-add";
         }
@@ -199,7 +216,7 @@ const request = (obj) => {
         filteredList.push(selectedCoursesList[i]);
       }
     }
-    GM_setValue("selectedCoursesList", {src: filteredList});
+    GM_setValue("selectedCoursesList", { src: filteredList });
   }
 
   function addToSemester(currentCourseId, selectedCoursesList) {
@@ -211,6 +228,6 @@ const request = (obj) => {
       summary: `summary${currentCourseId}`,
     };
     selectedCoursesList.push(currentCourse);
-    GM_setValue("selectedCoursesList", {src: selectedCoursesList});
+    GM_setValue("selectedCoursesList", { src: selectedCoursesList });
   }
 })();
