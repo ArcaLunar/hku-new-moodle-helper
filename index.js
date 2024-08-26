@@ -349,6 +349,8 @@ const request = (obj) => {
     enterCourse.classList.add("course-btn");
     let p = document.createElement("p");
     let pa = document.createElement("a");
+    pa.classList.add("btn");
+    pa.classList.add("btn-primary");
     pa.href = `https://moodle.hku.hk/course/view.php?id=${courseInfo.courseId}`;
     pa.textContent = "Click to enter this course";
     p.appendChild(pa);
