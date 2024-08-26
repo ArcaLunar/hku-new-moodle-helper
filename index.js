@@ -19,7 +19,12 @@
 
 //  #region 检查是否有本地数据，没有则初始化
 (() => {
-  if (!(GM_getValue("selectedCoursesList", {src: undefined}).src instanceof Array)) {
+  if (
+    !(
+      GM_getValue("selectedCoursesList", { src: undefined }).src instanceof
+      Array
+    )
+  ) {
     GM_setValue("selectedCoursesList", { src: [] });
   }
 })();
@@ -87,6 +92,14 @@ const request = (obj) => {
 
   const observer = new MutationObserver(callback);
   observer.observe(targetNode, config);
+
+  window.addEventListener("load", function () {
+    const url = window.location.href;
+    if (url == "https://moodle.hku.hk/") {
+      console.log("rendering");
+      renderMainPage();
+    }
+  });
   // #endregion
 
   // =====================
@@ -178,6 +191,7 @@ const request = (obj) => {
   }
   // #endregion
 
+  /* #region 初始化按钮监听 */
   function initButtonAction(coursePageList) {
     observer.disconnect(); // 不观测，防止递归
     // 获取所有按钮
@@ -206,6 +220,7 @@ const request = (obj) => {
 
     observer.observe(targetNode, config); // 重新激活
   }
+  /* #endregion */
 
   function removeFromSem(currentCourseId, selectedCoursesList) {
     console.log("removed");
@@ -224,10 +239,84 @@ const request = (obj) => {
     // 添加到课表
     var currentCourse = {
       courseId: currentCourseId,
-      teacher: `teacher${currentCourseId}`,
-      summary: `summary${currentCourseId}`,
+      courseInfoPack: parseCourseInfo(currentCourseId),
     };
     selectedCoursesList.push(currentCourse);
     GM_setValue("selectedCoursesList", { src: selectedCoursesList });
+  }
+
+  /* #region  主页渲染 */
+  function renderMainPage() {
+    const selectedCoursesList = GM_getValue("selectedCoursesList", {
+      src: [],
+    }).src;
+
+    let mainPage = document.getElementById("frontpage-course-list");
+    let checkCourseOfSemWrapper = document.getElementById(
+      "course-of-sem-wrapper"
+    );
+    if (checkCourseOfSemWrapper != null) {
+      checkCourseOfSemWrapper.remove();
+    }
+    // 插入 H2 标题
+    let courseOfSemWrapper = document.createElement("div");
+    courseOfSemWrapper.classList.add("course-of-sem-wrapper");
+    courseOfSemWrapper.id = "course-of-sem-wrapper";
+    let courseOfSemTitle = document.createElement("h2");
+    courseOfSemTitle.textContent = "Courses of the Semester";
+    courseOfSemTitle.id = "course-of-sem-title";
+    courseOfSemWrapper.appendChild(courseOfSemTitle);
+
+    // 插入选择的课程
+    for (let i = 0; i < selectedCoursesList.length; i++) {
+      let course = document.createElement("div");
+      course.classList.add("coursebox");
+      course.id = `course${selectedCoursesList[i].courseId}`;
+      course.textContent = selectedCoursesList[i].courseId;
+      courseOfSemWrapper.appendChild(course);
+    }
+
+    // 插入到主页
+    mainPage.insertBefore(courseOfSemWrapper, mainPage.firstChild);
+  }
+  /* #endregion */
+
+  // 解析 my/courses.php 界面的课程信息
+  function parseCourseInfo(courseId) {
+    var viewPage = document.getElementsByClassName(
+      "paged-content-page-container"
+    );
+    var coursePageList = viewPage[0].children;
+    for (let i = 0; i < coursePageList.length; i++) {
+      // 第一级
+      for (let c = 0; c < coursePageList[i].children[0].children.length; c++) {
+        // 第二级
+        let currentCourse = coursePageList[i].children[0].children[c];
+        if (currentCourse.dataset.courseId == courseId) {
+          let row = currentCourse.children[0];
+          // Image
+          var courseImg = row.children[0].children[0].children[0];
+
+          // Info
+          let courseInfo = row.children[1];
+          // Course Name
+          var courseName =
+            courseInfo.children[0].childNodes[4];
+
+          // Summary
+          var courseSummary = courseInfo.children[3];
+
+          ret = {
+            courseImg: courseImg.cloneNode(true),
+            courseName: courseName.cloneNode(true),
+            courseSummary: courseSummary.cloneNode(true),
+          };
+
+          console.log(ret);
+
+          return JSON.stringify(ret);
+        }
+      }
+    }
   }
 })();
