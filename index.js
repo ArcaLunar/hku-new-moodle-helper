@@ -30,6 +30,7 @@
     GM_setValue("selectedCoursesList", { src: [] });
   }
 })();
+GM_setValue("selectedCoursesList", { src: [] });
 // #endregion
 
 const request = (obj) => {
@@ -102,7 +103,7 @@ const request = (obj) => {
     if (url == "https://moodle.hku.hk/") {
       console.log("rendering");
       renderMainPage();
-      injectMainPageButton();
+
     }
   });
   // #endregion
@@ -224,7 +225,7 @@ const request = (obj) => {
 
         // 重新刷新
         let url = window.location.href;
-        if (url == "https://moodle.hku.hk") renderMainPage();
+        if (url == "https://moodle.hku.hk/") renderMainPage();
       });
     }
 
@@ -247,9 +248,16 @@ const request = (obj) => {
   function addToSemester(currentCourseId, selectedCoursesList) {
     console.log("added");
     // 添加到课表
+    var info;
+    if (window.location.href == "https://moodle.hku.hk/my/courses.php") {
+      info = parseCourseInfo(currentCourseId);
+    } else if (window.location.href == "https://moodle.hku.hk/") {
+      info = parseCourseInfoMainPage(currentCourseId);
+    }
+
     var currentCourse = {
       courseId: currentCourseId,
-      courseInfoPack: parseCourseInfo(currentCourseId),
+      courseInfoPack: info,
     };
     selectedCoursesList.push(currentCourse);
     GM_setValue("selectedCoursesList", { src: selectedCoursesList });
@@ -293,6 +301,8 @@ const request = (obj) => {
 
     // 插入到主页
     mainPage.insertBefore(courseOfSemWrapper, mainPage.firstChild);
+    
+    injectMainPageButton();
   }
   /* #endregion */
 
@@ -336,6 +346,53 @@ const request = (obj) => {
       }
     }
   }
+  function parseCourseInfoMainPage(courseId) {
+    let page = document.getElementsByClassName(
+      "frontpage-course-list-enrolled"
+    )[0];
+    let courses = page.getElementsByClassName("coursebox");
+
+    console.log(courses);
+
+    for (let i = 0; i < courses.length; i++) {
+      if (courseId == courses[i].dataset.courseid) {
+        let course = courses[i];
+        let ret = {};
+
+        // class name
+        let courseName = course.getElementsByClassName("coursename")[0];
+        ret.courseName = courseName.outerHTML;
+
+        // Image
+        let courseImg =
+          'background-image: url("' +
+          course.getElementsByClassName("courseimage")[0].dataset.src +
+          '");';
+        ret.courseImg = courseImg;
+
+        // Category
+        let coursecat = course.getElementsByClassName("coursecat")[0].children;
+        let category = coursecat[0].outerHTML;
+        let year = coursecat[1].outerHTML;
+        ret.courseCategory = category;
+        ret.courseYear = year;
+
+        // summary
+        let summary = course.getElementsByClassName("no-overflow")[0];
+        if (summary) {
+          summary.classList.remove("no-overflow");
+          summary.classList.add("summary");
+        } else {
+          summary = document.createElement("div");
+        }
+        ret.courseSummary = summary.outerHTML;
+
+        console.log(ret);
+
+        return ret;
+      }
+    }
+  }
   /* #endregion */
 
   /* #region  主页的课程卡片 */
@@ -346,6 +403,7 @@ const request = (obj) => {
     card.classList.add("list");
     card.classList.add("clearfix");
     card.courseId = courseInfo.courseId;
+    card.id = `courseCard${courseInfo.courseId}`;
     card.type = "1";
 
     let content = document.createElement("div");
@@ -396,13 +454,23 @@ const request = (obj) => {
     removeCourse.action = "to-remove";
     removeCourse.relatedCourseId = courseInfo.courseId;
     removeCourse.addEventListener("click", function () {
-      removeFromSem(this.relatedCourseId, GM_getValue("selectedCoursesList", { src: [] }).src);
-      this.parentElement.remove();
+      removeFromSem(
+        this.relatedCourseId,
+        GM_getValue("selectedCoursesList", { src: [] }).src
+      );
+      let thiscard = document.getElementById(
+        `courseCard${this.relatedCourseId}`
+      );
+      thiscard.remove();
+      renderMainPage();
     });
 
     // enter course
     let enterCourse = document.createElement("div");
     enterCourse.classList.add("course-btn");
+    let p1 = document.createElement("p");
+    p1.appendChild(removeCourse);
+    enterCourse.appendChild(p1);
     let p = document.createElement("p");
     let pa = document.createElement("a");
     pa.classList.add("btn");
@@ -414,7 +482,6 @@ const request = (obj) => {
 
     content.appendChild(alink);
     content.appendChild(summary);
-    content.appendChild(removeCourse);
     content.appendChild(enterCourse);
 
     card.appendChild(content);
@@ -422,10 +489,92 @@ const request = (obj) => {
   }
   /* #endregion */
 
+  /* #region 在主页插入按钮 */
   function injectMainPageButton() {
     let courseBoxes = document.getElementsByClassName("coursebox");
+    let selectedCoursesList = GM_getValue("selectedCoursesList", {
+      src: [],
+    }).src;
+
     for (let i = 0; i < courseBoxes.length; i++) {
       if (courseBoxes[i].classList.contains("moodle-helper-card")) continue;
+      let courseId = courseBoxes[i].dataset.courseid;
+      let courseButton = courseBoxes[i].getElementsByClassName("course-btn")[0];
+
+      // 移除已有按钮
+      let buttonElement = courseBoxes[i].getElementsByClassName("moodle-helper");
+      for (let j = buttonElement.length - 1; j >= 0; j--) {
+        buttonElement[j].remove();
+      }
+
+      // 检查是否已添加
+      var hasBeenAdded = false;
+      for (let j = 0; j < selectedCoursesList.length; j++) {
+        if (selectedCoursesList[j].courseId == courseId) {
+          hasBeenAdded = true;
+          break;
+        }
+      }
+
+      // 如果已添加
+      if (hasBeenAdded) {
+        let removeButton = document.createElement("button");
+        removeButton.classList.add("btn");
+        removeButton.classList.add("moodle-helper");
+        removeButton.classList.add("helper-remove-button");
+        removeButton.textContent = "Remove from this semester";
+        removeButton.action = "to-remove";
+        removeButton.relatedCourseId = courseId;
+        removeButton.addEventListener("click", function () {
+          if (this.action == "to-add") {
+            addToSemester(this.relatedCourseId, selectedCoursesList);
+            this.classList.remove("helper-add-button");
+            this.classList.add("helper-remove-button");
+            this.textContent = "Remove from this semester";
+            this.action = "to-remove";
+          } else if (this.action == "to-remove") {
+            removeFromSem(this.relatedCourseId, selectedCoursesList);
+            this.classList.remove("helper-remove-button");
+            this.classList.add("helper-add-button");
+            this.textContent = "Add to this semester";
+            this.action = "to-add";
+          }
+
+          // 重新刷新
+          let url = window.location.href;
+          if (url == "https://moodle.hku.hk/") renderMainPage();
+        });
+        courseButton.insertBefore(removeButton, courseButton.firstChild);
+      } else {
+        let addButton = document.createElement("button");
+        addButton.classList.add("btn");
+        addButton.classList.add("moodle-helper");
+        addButton.classList.add("helper-add-button");
+        addButton.textContent = "Add to this semester";
+        addButton.action = "to-add";
+        addButton.relatedCourseId = courseId;
+        addButton.addEventListener("click", function () {
+          if (this.action == "to-add") {
+            addToSemester(this.relatedCourseId, selectedCoursesList);
+            this.classList.remove("helper-add-button");
+            this.classList.add("helper-remove-button");
+            this.textContent = "Remove from this semester";
+            this.action = "to-remove";
+          } else if (this.action == "to-remove") {
+            removeFromSem(this.relatedCourseId, selectedCoursesList);
+            this.classList.remove("helper-remove-button");
+            this.classList.add("helper-add-button");
+            this.textContent = "Add to this semester";
+            this.action = "to-add";
+          }
+
+          // 重新刷新
+          let url = window.location.href;
+          if (url == "https://moodle.hku.hk/") renderMainPage();
+        });
+        courseButton.insertBefore(addButton, courseButton.firstChild);
+      }
     }
   }
+  /* #endregion */
 })();
