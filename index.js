@@ -103,7 +103,6 @@ const request = (obj) => {
     if (url == "https://moodle.hku.hk/") {
       console.log("rendering");
       renderMainPage();
-
     }
   });
   // #endregion
@@ -139,6 +138,14 @@ const request = (obj) => {
       }
     })();
 
+    // 什么视图？
+    var view = (() => {
+      if (window.location.href.includes("my/courses.php")) {
+        let button = document.getElementById("displaydropdown");
+        return button.children[0].textContent.trim();
+      }
+    })();
+
     console.log("Active Index: " + activeIndex);
 
     // 遍历当前页面的课程
@@ -160,7 +167,12 @@ const request = (obj) => {
           }
         }
 
-        let displayedInfo = currentPage[i].children[0].children[1]; // div.row // flex-column
+        let displayedInfo;
+        if (view != "Card") {
+          displayedInfo = currentPage[i].children[0].children[1]; // div.row // flex-column
+        } else {
+          displayedInfo = currentPage[i].children[1].children[0].children[0]; // div.card-body
+        }
 
         // 新增的按钮
         // 检查按钮是否已被添加
@@ -302,47 +314,92 @@ const request = (obj) => {
 
     // 插入到主页
     mainPage.insertBefore(courseOfSemWrapper, mainPage.firstChild);
-    
+
     injectMainPageButton();
   }
   /* #endregion */
 
   /* #region  解析 my/courses.php 界面的课程信息 */
   function parseCourseInfo(courseId) {
+    // 什么视图？
+    var view = (() => {
+      if (window.location.href.includes("my/courses.php")) {
+        let button = document.getElementById("displaydropdown");
+        return button.children[0].textContent.trim();
+      }
+    })();
     var viewPage = document.getElementsByClassName(
       "paged-content-page-container"
     );
     var coursePageList = viewPage[0].children;
-    for (let i = 0; i < coursePageList.length; i++) {
-      // 第一级
-      for (let c = 0; c < coursePageList[i].children[0].children.length; c++) {
-        // 第二级
-        let currentCourse = coursePageList[i].children[0].children[c];
-        if (currentCourse.dataset.courseId == courseId) {
-          let ret = {};
-          let row = currentCourse.children[0];
-          // Image
-          var courseImg =
-            row.children[0].children[0].children[0].attributes["style"].value;
-          ret.courseImg = courseImg;
+    if (view != "Card") {
+      for (let i = 0; i < coursePageList.length; i++) {
+        // 第一级
+        for (
+          let c = 0;
+          c < coursePageList[i].children[0].children.length;
+          c++
+        ) {
+          // 第二级
+          let currentCourse = coursePageList[i].children[0].children[c];
+          if (currentCourse.dataset.courseId == courseId) {
+            let ret = {};
+            let row = currentCourse.children[0];
+            // Image
+            var courseImg =
+              row.children[0].children[0].children[0].attributes["style"].value;
+            ret.courseImg = courseImg;
 
-          // Info
-          let courseInfo = row.children[1];
-          // Course Name
-          var courseName = courseInfo.children[0];
-          ret.courseName = courseName.outerHTML;
+            // Info
+            let courseInfo = row.children[1];
+            // Course Name
+            var courseName = courseInfo.children[0];
+            ret.courseName = courseName.outerHTML;
 
-          // Category
-          ret.courseCategory = courseInfo.children[1].outerHTML;
-          ret.courseYear = courseInfo.children[2].outerHTML;
+            // Category
+            ret.courseCategory = courseInfo.children[1].outerHTML;
+            // Year
+            ret.courseYear = courseInfo.children[2].outerHTML;
 
-          // Summary
-          var courseSummary = courseInfo.children[3];
-          ret.courseSummary = courseSummary.outerHTML;
+            // Summary
+            var courseSummary = courseInfo.children[3];
+            ret.courseSummary = courseSummary.outerHTML;
 
-          console.log(ret);
+            console.log(ret);
 
-          return ret;
+            return ret;
+          }
+        }
+      }
+    } else {
+      for (let i = 0; i < coursePageList.length; i++) {
+        // 第一级
+        for (
+          let j = 0;
+          j < coursePageList[i].children[0].children.length;
+          j++
+        ) {
+          let course = coursePageList[i].children[0].children[j];
+          let currentCourseId = course.dataset.courseId;
+          if(currentCourseId == courseId) {
+            let ret = {};
+            // Image
+            let courseImg =
+              course.children[0].children[0].attributes["style"].value;
+            ret.courseImg = courseImg;
+
+            let courseInfo = course.children[1].children[0].children[0];
+            // Course Name
+            ret.courseName = courseInfo.children[0].outerHTML;
+            // Category
+            ret.courseCategory = courseInfo.children[1].children[0].outerHTML;
+            // Year
+            ret.courseYear = courseInfo.children[1].children[1].outerHTML;
+            // Summary
+            ret.courseSummary = document.createElement("div").outerHTML;
+
+            return ret;
+          }
         }
       }
     }
@@ -504,7 +561,8 @@ const request = (obj) => {
       let courseButton = courseBoxes[i].getElementsByClassName("course-btn")[0];
 
       // 移除已有按钮
-      let buttonElement = courseBoxes[i].getElementsByClassName("moodle-helper");
+      let buttonElement =
+        courseBoxes[i].getElementsByClassName("moodle-helper");
       for (let j = buttonElement.length - 1; j >= 0; j--) {
         buttonElement[j].remove();
       }
