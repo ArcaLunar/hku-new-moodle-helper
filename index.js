@@ -5,7 +5,7 @@
 // @include      https://moodle.hku.hk/
 // @match        https://moodle.hku.hk/my/courses.php
 // @run-at 	 document-end
-// @version      2024-08-26
+// @version      2024-08-26.04
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
 // @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper/website.css
@@ -151,6 +151,17 @@ const request = (obj) => {
     // 遍历当前页面的课程
     if (activeIndex != undefined && activeIndex != null) {
       var currentPage = coursePageList[activeIndex].children[0].children; // 课程 HTML 代码
+      if (view == "Card") {
+        if (!currentPage[0].classList.contains("card")) {
+          observer.observe(targetNode, config); // 重新激活
+          return;
+        }
+      } else {
+        if (!currentPage[0].classList.contains("course-listitem")) {
+          observer.observe(targetNode, config); // 重新激活
+          return;
+        }
+      }
       console.log("Current Page: ");
       console.log(currentPage);
 
@@ -381,7 +392,7 @@ const request = (obj) => {
         ) {
           let course = coursePageList[i].children[0].children[j];
           let currentCourseId = course.dataset.courseId;
-          if(currentCourseId == courseId) {
+          if (currentCourseId == courseId) {
             let ret = {};
             // Image
             let courseImg =
