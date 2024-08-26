@@ -166,6 +166,8 @@ const request = (obj) => {
         let newButton = document.createElement("button");
         newButton.id = `course${currentCourseId}`;
         newButton.classList.add("moodle-helper");
+        newButton.classList.add("btn");
+        newButton.classList.add("btn-primary");
         newButton.relatedCourseId = currentCourseId;
 
         if (initState) {
@@ -215,6 +217,10 @@ const request = (obj) => {
           this.textContent = "Add to this semester";
           this.action = "to-add";
         }
+
+        // 重新刷新
+        let url = window.location.href;
+        if (url == "https://moodle.hku.hk") renderMainPage();
       });
     }
 
@@ -250,6 +256,14 @@ const request = (obj) => {
     const selectedCoursesList = GM_getValue("selectedCoursesList", {
       src: [],
     }).src;
+
+    // 先全部清除
+    (() => {
+      let allCards = document.getElementsByClassName("moodle-helper-card");
+      for (let i = allCards.length - 1; i >= 0; i--) {
+        allCards[i].remove();
+      }
+    })();
 
     let mainPage = document.getElementById("frontpage-course-list");
     let checkCourseOfSemWrapper = document.getElementById(
@@ -293,7 +307,8 @@ const request = (obj) => {
           let ret = {};
           let row = currentCourse.children[0];
           // Image
-          var courseImg = row.children[0].children[0].children[0].attributes['style'].value;
+          var courseImg =
+            row.children[0].children[0].children[0].attributes["style"].value;
           ret.courseImg = courseImg;
 
           // Info
@@ -314,14 +329,14 @@ const request = (obj) => {
     }
   }
 
-  function createCard(courseInfo){
+  function createCard(courseInfo) {
     let card = document.createElement("div");
     card.classList.add("moodle-helper-card");
     card.classList.add("coursebox");
     card.classList.add("list");
     card.classList.add("clearfix");
     card.courseId = courseInfo.courseId;
-    card.type = '1';
+    card.type = "1";
 
     let content = document.createElement("div");
     content.classList.add("content");
@@ -330,8 +345,10 @@ const request = (obj) => {
     alink.href = `https://moodle.hku.hk/course/view.php?id=${courseInfo.courseId}`;
     let img = document.createElement("div");
     img.classList.add("courseimage");
-    img.setAttribute('style', courseInfo.courseInfoPack.courseImg);
-    img.dataset.src = courseInfo.courseInfoPack.courseImg.replace("background-image: url(\"", "").replace("\");", "");
+    img.setAttribute("style", courseInfo.courseInfoPack.courseImg);
+    img.dataset.src = courseInfo.courseInfoPack.courseImg
+      .replace('background-image: url("', "")
+      .replace('");', "");
     alink.appendChild(img);
     // summary
     let summary = document.createElement("div");
@@ -342,7 +359,6 @@ const request = (obj) => {
     h3a.innerHTML = courseInfo.courseInfoPack.courseName;
     h3.appendChild(h3a);
     summary.appendChild(h3);
-
 
     // enter course
     let enterCourse = document.createElement("div");
