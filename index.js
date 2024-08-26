@@ -102,6 +102,7 @@ const request = (obj) => {
     if (url == "https://moodle.hku.hk/") {
       console.log("rendering");
       renderMainPage();
+      injectMainPageButton();
     }
   });
   // #endregion
@@ -171,7 +172,6 @@ const request = (obj) => {
         newButton.id = `course${currentCourseId}`;
         newButton.classList.add("moodle-helper");
         newButton.classList.add("btn");
-        newButton.classList.add("btn-primary");
         newButton.relatedCourseId = currentCourseId;
 
         if (initState) {
@@ -387,6 +387,19 @@ const request = (obj) => {
     summary.appendChild(category);
     summary.appendChild(courseSummary);
 
+    // 移除课程
+    let removeCourse = document.createElement("button");
+    removeCourse.classList.add("btn");
+    removeCourse.classList.add("moodle-helper");
+    removeCourse.classList.add("helper-remove-button");
+    removeCourse.textContent = "Remove from this semester";
+    removeCourse.action = "to-remove";
+    removeCourse.relatedCourseId = courseInfo.courseId;
+    removeCourse.addEventListener("click", function () {
+      removeFromSem(this.relatedCourseId, GM_getValue("selectedCoursesList", { src: [] }).src);
+      this.parentElement.remove();
+    });
+
     // enter course
     let enterCourse = document.createElement("div");
     enterCourse.classList.add("course-btn");
@@ -401,10 +414,18 @@ const request = (obj) => {
 
     content.appendChild(alink);
     content.appendChild(summary);
+    content.appendChild(removeCourse);
     content.appendChild(enterCourse);
 
     card.appendChild(content);
     return card;
   }
   /* #endregion */
+
+  function injectMainPageButton() {
+    let courseBoxes = document.getElementsByClassName("coursebox");
+    for (let i = 0; i < courseBoxes.length; i++) {
+      if (courseBoxes[i].classList.contains("moodle-helper-card")) continue;
+    }
+  }
 })();
