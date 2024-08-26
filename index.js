@@ -5,7 +5,7 @@
 // @include      https://moodle.hku.hk/
 // @match        https://moodle.hku.hk/my/courses.php
 // @run-at 	 document-end
-// @version      2024-08-23
+// @version      2024-08-26
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
 // @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper/website.css
@@ -173,6 +173,7 @@ const request = (obj) => {
         newButton.id = `course${currentCourseId}`;
         newButton.classList.add("moodle-helper");
         newButton.classList.add("btn");
+        newButton.classList.add("btn-primary");
         newButton.relatedCourseId = currentCourseId;
 
         if (initState) {
@@ -448,6 +449,7 @@ const request = (obj) => {
     // 移除课程
     let removeCourse = document.createElement("button");
     removeCourse.classList.add("btn");
+    removeCourse.classList.add("btn-primary");
     removeCourse.classList.add("moodle-helper");
     removeCourse.classList.add("helper-remove-button");
     removeCourse.textContent = "Remove from this semester";
@@ -520,6 +522,7 @@ const request = (obj) => {
       if (hasBeenAdded) {
         let removeButton = document.createElement("button");
         removeButton.classList.add("btn");
+        removeButton.classList.add("btn-primary");
         removeButton.classList.add("moodle-helper");
         removeButton.classList.add("helper-remove-button");
         removeButton.textContent = "Remove from this semester";
@@ -548,6 +551,7 @@ const request = (obj) => {
       } else {
         let addButton = document.createElement("button");
         addButton.classList.add("btn");
+        addButton.classList.add("btn-primary");
         addButton.classList.add("moodle-helper");
         addButton.classList.add("helper-add-button");
         addButton.textContent = "Add to this semester";
