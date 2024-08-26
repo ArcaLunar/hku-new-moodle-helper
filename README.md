@@ -1,5 +1,8 @@
 # HKU New Moodle Helper
+
 Course manager for HKU moodle with new design
+
+有的时候新学期的课不在主页，但是侧栏也没有课显示。而 Moodle 的 my/courses.php 界面一直没有适配，所以写了这个脚本填补这个空当
 
 ## 下载方式
 

@@ -8,7 +8,7 @@
 // @version      2024-08-23
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
-// @resource     mystyle https://cdn.jsdelivr.net/gh/AENeuro/HKU-Moodle-Helper@ede423d/myStyle.css
+// @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper/website.css
 // @resource     fontawesome https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hku.hk
 // @grant        GM_getResourceText
@@ -54,6 +54,8 @@ const request = (obj) => {
 };
  
 (function () {
+  // 加载样式
+  GM_addStyle(GM_getResourceText("mystyle"));
   //   var url = window.location.href;
   // =====================
   // #region 监听 my/courses 页面变化
