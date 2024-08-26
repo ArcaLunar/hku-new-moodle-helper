@@ -30,7 +30,7 @@
     GM_setValue("selectedCoursesList", { src: [] });
   }
 })();
-GM_setValue("selectedCoursesList", { src: [] });
+// GM_setValue("selectedCoursesList", { src: [] });
 // #endregion
 
 const request = (obj) => {
