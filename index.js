@@ -4,7 +4,7 @@
 // @include      https://moodle.hku.hk/*
 // @include      https://moodle.hku.hk/
 // @match        https://moodle.hku.hk/my/courses.php
-// @run-at 	 	 document-end
+// @run-at 	 document-end
 // @version      2024-08-23
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
@@ -15,8 +15,10 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @namespace    https://github.com/ArcaLunar/hku-new-moodle-helper
+// @license      CC BY-NC 4.0
 // ==/UserScript==
-
+ 
 //  #region 检查是否有本地数据，没有则初始化
 (() => {
   if (
@@ -29,7 +31,7 @@
   }
 })();
 // #endregion
-
+ 
 const request = (obj) => {
   return new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
@@ -50,16 +52,16 @@ const request = (obj) => {
     xhr.send(JSON.stringify(obj.body));
   });
 };
-
+ 
 (function () {
   //   var url = window.location.href;
   // =====================
   // #region 监听 my/courses 页面变化
   const targetNode = document.getElementById("page-content");
   const config = { attributes: true, childList: true, subtree: true };
-
+ 
   const url = window.location.href;
-
+ 
   const callback = function (mutationsList, observer) {
     var viewPage = document.getElementsByClassName(
       "paged-content-page-container"
@@ -67,11 +69,11 @@ const request = (obj) => {
     if (viewPage.length > 0) {
       console.log("View Page Detected");
       console.log(viewPage[0]);
-
+ 
       var coursePageList = viewPage[0].children;
       console.log("Course Page List Detected");
       console.log(coursePageList);
-
+ 
       // 检查是否加载完成
       if (coursePageList.length > 0) {
         var containsDivOnly = true;
@@ -89,10 +91,10 @@ const request = (obj) => {
       }
     }
   };
-
+ 
   const observer = new MutationObserver(callback);
   observer.observe(targetNode, config);
-
+ 
   window.addEventListener("load", function () {
     const url = window.location.href;
     if (url == "https://moodle.hku.hk/") {
@@ -101,7 +103,7 @@ const request = (obj) => {
     }
   });
   // #endregion
-
+ 
   // =====================
   // #region 添加按钮
   // coursePageList: 分页的课程列表
@@ -113,7 +115,7 @@ const request = (obj) => {
     }).src;
     console.log("Selected Courses List: ");
     console.log(selectedCoursesList);
-
+ 
     // 删掉所有 Button
     (() => {
       let allButtons = document.getElementsByClassName("moodle-helper");
@@ -121,7 +123,7 @@ const request = (obj) => {
         allButtons[i].remove();
       }
     })();
-
+ 
     // 在哪一页
     var activeIndex = (() => {
       if (url.includes("my/courses.php")) {
@@ -132,20 +134,20 @@ const request = (obj) => {
         }
       }
     })();
-
+ 
     console.log("Active Index: " + activeIndex);
-
+ 
     // 遍历当前页面的课程
     if (activeIndex != undefined && activeIndex != null) {
       var currentPage = coursePageList[activeIndex].children[0].children; // 课程 HTML 代码
       console.log("Current Page: ");
       console.log(currentPage);
-
+ 
       for (var i = 0; i < currentPage.length; i++) {
         let hasBeenAdded = false;
         var currentCourseId = currentPage[i].dataset.courseId;
         console.log(currentCourseId);
-
+ 
         // 检查是否已添加
         for (var j = 0; j < selectedCoursesList.length; j++) {
           if (currentCourseId == selectedCoursesList[j].courseId) {
@@ -153,15 +155,15 @@ const request = (obj) => {
             break;
           }
         }
-
+ 
         let displayedInfo = currentPage[i].children[0].children[1]; // div.row // flex-column
-
+ 
         // 新增的按钮
         // 检查按钮是否已被添加
         var getButton = document.getElementById(`course${currentCourseId}`);
         // 判断是 remove 还是 add
         var initState = getButton == null || getButton == undefined;
-
+ 
         // 初始化按钮
         let newButton = document.createElement("button");
         newButton.id = `course${currentCourseId}`;
@@ -169,7 +171,7 @@ const request = (obj) => {
         newButton.classList.add("btn");
         newButton.classList.add("btn-primary");
         newButton.relatedCourseId = currentCourseId;
-
+ 
         if (initState) {
           if (hasBeenAdded) {
             newButton.textContent = "Remove from this semester";
@@ -186,13 +188,13 @@ const request = (obj) => {
         }
       }
     }
-
+ 
     console.log("Button Init Complete");
-
+ 
     observer.observe(targetNode, config); // 重新激活
   }
   // #endregion
-
+ 
   /* #region 初始化按钮监听 */
   function initButtonAction(coursePageList) {
     observer.disconnect(); // 不观测，防止递归
@@ -201,7 +203,7 @@ const request = (obj) => {
     let selectedCoursesList = GM_getValue("selectedCoursesList", {
       src: [],
     }).src;
-
+ 
     for (let i = 0; i < allButtons.length; i++) {
       allButtons[i].addEventListener("click", function () {
         if (this.action == "to-add") {
@@ -217,17 +219,17 @@ const request = (obj) => {
           this.textContent = "Add to this semester";
           this.action = "to-add";
         }
-
+ 
         // 重新刷新
         let url = window.location.href;
         if (url == "https://moodle.hku.hk") renderMainPage();
       });
     }
-
+ 
     observer.observe(targetNode, config); // 重新激活
   }
   /* #endregion */
-
+ 
   function removeFromSem(currentCourseId, selectedCoursesList) {
     console.log("removed");
     // 从课表删除
@@ -239,7 +241,7 @@ const request = (obj) => {
     }
     GM_setValue("selectedCoursesList", { src: filteredList });
   }
-
+ 
   function addToSemester(currentCourseId, selectedCoursesList) {
     console.log("added");
     // 添加到课表
@@ -250,13 +252,13 @@ const request = (obj) => {
     selectedCoursesList.push(currentCourse);
     GM_setValue("selectedCoursesList", { src: selectedCoursesList });
   }
-
+ 
   /* #region  主页渲染 */
   function renderMainPage() {
     const selectedCoursesList = GM_getValue("selectedCoursesList", {
       src: [],
     }).src;
-
+ 
     // 先全部清除
     (() => {
       let allCards = document.getElementsByClassName("moodle-helper-card");
@@ -264,7 +266,7 @@ const request = (obj) => {
         allCards[i].remove();
       }
     })();
-
+ 
     let mainPage = document.getElementById("frontpage-course-list");
     let checkCourseOfSemWrapper = document.getElementById(
       "course-of-sem-wrapper"
@@ -280,18 +282,18 @@ const request = (obj) => {
     courseOfSemTitle.textContent = "Courses of the Semester";
     courseOfSemTitle.id = "course-of-sem-title";
     courseOfSemWrapper.appendChild(courseOfSemTitle);
-
+ 
     // 插入选择的课程
     for (let i = 0; i < selectedCoursesList.length; i++) {
       let course = createCard(selectedCoursesList[i]);
       courseOfSemWrapper.appendChild(course);
     }
-
+ 
     // 插入到主页
     mainPage.insertBefore(courseOfSemWrapper, mainPage.firstChild);
   }
   /* #endregion */
-
+ 
   // 解析 my/courses.php 界面的课程信息
   function parseCourseInfo(courseId) {
     var viewPage = document.getElementsByClassName(
@@ -310,25 +312,25 @@ const request = (obj) => {
           var courseImg =
             row.children[0].children[0].children[0].attributes["style"].value;
           ret.courseImg = courseImg;
-
+ 
           // Info
           let courseInfo = row.children[1];
           // Course Name
           var courseName = courseInfo.children[0];
           ret.courseName = courseName.outerHTML;
-
+ 
           // Summary
           var courseSummary = courseInfo.children[3];
           ret.courseSummary = courseSummary.outerHTML;
-
+ 
           console.log(ret);
-
+ 
           return ret;
         }
       }
     }
   }
-
+ 
   function createCard(courseInfo) {
     let card = document.createElement("div");
     card.classList.add("moodle-helper-card");
@@ -337,7 +339,7 @@ const request = (obj) => {
     card.classList.add("clearfix");
     card.courseId = courseInfo.courseId;
     card.type = "1";
-
+ 
     let content = document.createElement("div");
     content.classList.add("content");
     // 缩略图
@@ -359,7 +361,7 @@ const request = (obj) => {
     h3a.innerHTML = courseInfo.courseInfoPack.courseName;
     h3.appendChild(h3a);
     summary.appendChild(h3);
-
+ 
     // enter course
     let enterCourse = document.createElement("div");
     enterCourse.classList.add("course-btn");
@@ -371,11 +373,11 @@ const request = (obj) => {
     pa.textContent = "Click to enter this course";
     p.appendChild(pa);
     enterCourse.appendChild(p);
-
+ 
     content.appendChild(alink);
     content.appendChild(summary);
     content.appendChild(enterCourse);
-
+ 
     card.appendChild(content);
     return card;
   }
