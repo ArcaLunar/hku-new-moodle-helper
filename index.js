@@ -293,28 +293,25 @@ const request = (obj) => {
         // 第二级
         let currentCourse = coursePageList[i].children[0].children[c];
         if (currentCourse.dataset.courseId == courseId) {
+          let ret = {};
           let row = currentCourse.children[0];
           // Image
           var courseImg = row.children[0].children[0].children[0];
+          ret.courseImg = courseImg.outerHTML;
 
           // Info
           let courseInfo = row.children[1];
           // Course Name
-          var courseName =
-            courseInfo.children[0].childNodes[4];
+          var courseName = courseInfo.children[0];
+          ret.courseName = courseName.outerHTML;
 
           // Summary
           var courseSummary = courseInfo.children[3];
-
-          ret = {
-            courseImg: courseImg.cloneNode(true),
-            courseName: courseName.cloneNode(true),
-            courseSummary: courseSummary.cloneNode(true),
-          };
+          ret.courseSummary = courseSummary.outerHTML;
 
           console.log(ret);
 
-          return JSON.stringify(ret);
+          return ret;
         }
       }
     }
