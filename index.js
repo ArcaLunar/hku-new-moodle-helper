@@ -269,10 +269,7 @@ const request = (obj) => {
 
     // 插入选择的课程
     for (let i = 0; i < selectedCoursesList.length; i++) {
-      let course = document.createElement("div");
-      course.classList.add("coursebox");
-      course.id = `course${selectedCoursesList[i].courseId}`;
-      course.textContent = selectedCoursesList[i].courseId;
+      let course = createCard(selectedCoursesList[i]);
       courseOfSemWrapper.appendChild(course);
     }
 
@@ -296,8 +293,8 @@ const request = (obj) => {
           let ret = {};
           let row = currentCourse.children[0];
           // Image
-          var courseImg = row.children[0].children[0].children[0];
-          ret.courseImg = courseImg.outerHTML;
+          var courseImg = row.children[0].children[0].children[0].attributes['style'].value;
+          ret.courseImg = courseImg;
 
           // Info
           let courseInfo = row.children[1];
@@ -315,5 +312,53 @@ const request = (obj) => {
         }
       }
     }
+  }
+
+  function createCard(courseInfo){
+    let card = document.createElement("div");
+    card.classList.add("moodle-helper-card");
+    card.classList.add("coursebox");
+    card.classList.add("list");
+    card.classList.add("clearfix");
+    card.courseId = courseInfo.courseId;
+    card.type = '1';
+
+    let content = document.createElement("div");
+    content.classList.add("content");
+    // 缩略图
+    let alink = document.createElement("a");
+    alink.href = `https://moodle.hku.hk/course/view.php?id=${courseInfo.courseId}`;
+    let img = document.createElement("div");
+    img.classList.add("courseimage");
+    img.setAttribute('style', courseInfo.courseInfoPack.courseImg);
+    img.dataset.src = courseInfo.courseInfoPack.courseImg.replace("background-image: url(\"", "").replace("\");", "");
+    alink.appendChild(img);
+    // summary
+    let summary = document.createElement("div");
+    summary.classList.add("summary");
+    let h3 = document.createElement("h3");
+    h3.classList.add("coursename");
+    let h3a = document.createElement("a");
+    h3a.innerHTML = courseInfo.courseInfoPack.courseName;
+    h3.appendChild(h3a);
+    summary.appendChild(h3);
+
+
+    // enter course
+    let enterCourse = document.createElement("div");
+    enterCourse.classList.add("course-btn");
+    let p = document.createElement("p");
+    let pa = document.createElement("a");
+    pa.href = `https://moodle.hku.hk/course/view.php?id=${courseInfo.courseId}`;
+    pa.textContent = "Click to enter this course";
+    p.appendChild(pa);
+    enterCourse.appendChild(p);
+
+    content.appendChild(alink);
+    content.appendChild(summary);
+    content.appendChild(enterCourse);
+
+    card.appendChild(content);
+    return card;
   }
 })();
