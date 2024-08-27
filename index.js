@@ -8,7 +8,7 @@
 // @version      2024-08-26.05
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
-// @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper@8bbe438/website.css
+// @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper@578d6aa/website.css
 // @resource     fontawesome https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hku.hk
 // @grant        GM_getResourceText
