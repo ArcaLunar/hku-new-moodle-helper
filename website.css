@@ -3,6 +3,7 @@
 
 .helper-add-button,
 .helper-remove-button {
+  display: inline-block;
   margin-left: 0px;
   margin-bottom: 0px;
   order: 4;

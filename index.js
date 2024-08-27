@@ -5,10 +5,10 @@
 // @include      https://moodle.hku.hk/
 // @match        https://moodle.hku.hk/my/courses.php
 // @run-at 	 document-end
-// @version      2024-08-26.04
+// @version      2024-08-26.05
 // @description  course helper for HKU Moodle with new design
 // @author       ArcaLunar
-// @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper/website.css
+// @resource     mystyle https://cdn.jsdelivr.net/gh/ArcaLunar/hku-new-moodle-helper@8bbe438/website.css
 // @resource     fontawesome https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=hku.hk
 // @grant        GM_getResourceText
@@ -66,30 +66,33 @@ const request = (obj) => {
   const url = window.location.href;
 
   const callback = function (mutationsList, observer) {
-    var viewPage = document.getElementsByClassName(
-      "paged-content-page-container"
-    );
-    if (viewPage.length > 0) {
-      console.log("View Page Detected");
-      console.log(viewPage[0]);
+    let url = window.location.href;
+    if (url.includes("my/courses.php")) {
+      var viewPage = document.getElementsByClassName(
+        "paged-content-page-container"
+      );
+      if (viewPage.length > 0) {
+        console.log("View Page Detected");
+        console.log(viewPage[0]);
 
-      var coursePageList = viewPage[0].children;
-      console.log("Course Page List Detected");
-      console.log(coursePageList);
+        var coursePageList = viewPage[0].children;
+        console.log("Course Page List Detected");
+        console.log(coursePageList);
 
-      // 检查是否加载完成
-      if (coursePageList.length > 0) {
-        var containsDivOnly = true;
-        for (var i = 0; i < coursePageList.length; i++) {
-          if (coursePageList[i].tagName != "DIV") {
-            containsDivOnly = false;
-            break;
+        // 检查是否加载完成
+        if (coursePageList.length > 0) {
+          var containsDivOnly = true;
+          for (var i = 0; i < coursePageList.length; i++) {
+            if (coursePageList[i].tagName != "DIV") {
+              containsDivOnly = false;
+              break;
+            }
           }
-        }
-        if (containsDivOnly) {
-          console.log("Contains Div");
-          initButton(coursePageList); // 初始化按钮
-          initButtonAction(coursePageList); // 初始化按钮事件
+          if (containsDivOnly) {
+            console.log("Contains Div");
+            initButton(coursePageList); // 初始化按钮
+            initButtonAction(coursePageList); // 初始化按钮事件
+          }
         }
       }
     }
@@ -101,8 +104,17 @@ const request = (obj) => {
   window.addEventListener("load", function () {
     const url = window.location.href;
     if (url == "https://moodle.hku.hk/") {
+      // 主页
       console.log("rendering");
       renderMainPage();
+    } else if (url.includes("course/search.php")) {
+      // Search 界面
+      let allCourses = document.getElementsByClassName("coursebox");
+      if (allCourses && allCourses.length > 0) {
+        console.log("Search Page Detected. Start initializing");
+        console.log(allCourses);
+        initButtonSearchPage(allCourses);
+      }
     }
   });
   // #endregion
@@ -220,6 +232,80 @@ const request = (obj) => {
 
     observer.observe(targetNode, config); // 重新激活
   }
+  function initButtonSearchPage(allCourses) {
+    // 提取已选课程列表
+    let selectedCoursesList = GM_getValue("selectedCoursesList", {
+      src: [],
+    }).src;
+    console.log("Selected Courses List: ");
+    console.log(selectedCoursesList);
+    // 删掉所有 button
+
+    for (let i = 0; i < allCourses.length; i++) {
+      let hasBeenAdded = false;
+      let currentCourseId = allCourses[i].dataset.courseid;
+
+      (() => {
+        let allButtons = allCourses[i].getElementsByClassName("moodle-helper");
+        for (let i = allButtons.length - 1; i >= 0; i--) {
+          allButtons[i].remove();
+        }
+      })();
+      // 检查是否已添加
+      for (let j = 0; j < selectedCoursesList.length; j++) {
+        if (currentCourseId == selectedCoursesList[j].courseId) {
+          hasBeenAdded = true;
+          break;
+        }
+      }
+
+      let getButton = document.getElementById(`course${currentCourseId}`);
+      let initState = getButton == null || getButton == undefined;
+
+      // 初始化按钮
+      let newButton = document.createElement("button");
+      newButton.classList.add("moodle-helper");
+      newButton.classList.add("btn");
+      newButton.classList.add("btn-primary");
+      newButton.id = `course${currentCourseId}`;
+      newButton.relatedCourseId = currentCourseId;
+
+      if (hasBeenAdded) {
+        newButton.textContent = "Remove from this semester";
+        newButton.action = "to-remove";
+        newButton.classList.add("helper-remove-button");
+      } else {
+        newButton.textContent = "Add to this semester";
+        newButton.action = "to-add";
+        newButton.classList.add("helper-add-button");
+      }
+
+      newButton.addEventListener("click", function () {
+        if (this.action == "to-add") {
+          this.classList.remove("helper-add-button");
+          this.classList.add("helper-remove-button");
+          this.textContent = "Remove from this semester";
+          addToSemester(
+            this.relatedCourseId,
+            GM_getValue("selectedCoursesList", { src: [] }).src
+          );
+          this.action = "to-remove";
+        } else if (this.action == "to-remove") {
+          this.classList.remove("helper-remove-button");
+          this.classList.add("helper-add-button");
+          this.textContent = "Add to this semester";
+          removeFromSem(
+            this.relatedCourseId,
+            GM_getValue("selectedCoursesList", { src: [] }).src
+          );
+          this.action = "to-add";
+        }
+      });
+
+      let whereToInsert = allCourses[i].getElementsByClassName("course-btn")[0];
+      whereToInsert.insertBefore(newButton, whereToInsert.firstChild);
+    }
+  }
   // #endregion
 
   /* #region 初始化按钮监听 */
@@ -267,6 +353,7 @@ const request = (obj) => {
       }
     }
     GM_setValue("selectedCoursesList", { src: filteredList });
+    console.log(filteredList);
   }
 
   function addToSemester(currentCourseId, selectedCoursesList) {
@@ -277,6 +364,8 @@ const request = (obj) => {
       info = parseCourseInfo(currentCourseId);
     } else if (window.location.href == "https://moodle.hku.hk/") {
       info = parseCourseInfoMainPage(currentCourseId);
+    } else if (window.location.href.includes("course/search.php")) {
+      info = parseCourseInfoSearchPage(currentCourseId);
     }
 
     var currentCourse = {
@@ -285,6 +374,7 @@ const request = (obj) => {
     };
     selectedCoursesList.push(currentCourse);
     GM_setValue("selectedCoursesList", { src: selectedCoursesList });
+    console.log(selectedCoursesList);
   }
 
   /* #region  主页渲染 */
@@ -455,6 +545,52 @@ const request = (obj) => {
           summary = document.createElement("div");
         }
         ret.courseSummary = summary.outerHTML;
+
+        console.log(ret);
+
+        return ret;
+      }
+    }
+  }
+  function parseCourseInfoSearchPage(courseId) {
+    console.log("Parsing Course Info");
+    let allCourses = document.getElementsByClassName("coursebox");
+    // 定位到课程
+    for (let i = 0; i < allCourses.length; i++) {
+      if (courseId == allCourses[i].dataset.courseid) {
+        let course = allCourses[i];
+        let content = course.getElementsByClassName("content")[0];
+        let ret = {};
+
+        // courseImage
+        let courseImg =
+          content.getElementsByClassName("courseimage")[0].attributes["style"]
+            .value;
+        ret.courseImg = courseImg;
+
+        // courseName
+        let courseName = content.getElementsByClassName("coursename")[0];
+        ret.courseName = courseName.outerHTML;
+
+        // courseCategory
+        let courseCategory =
+          content.getElementsByClassName("coursecat")[0].children[0];
+        ret.courseCategory = courseCategory.outerHTML;
+
+        // courseYear
+        let courseYear =
+          content.getElementsByClassName("coursecat")[0].children[1];
+        ret.courseYear = courseYear.outerHTML;
+
+        // courseSummary
+        let courseSummary = content.getElementsByClassName("no-overflow")[0];
+        if (courseSummary) {
+          courseSummary.classList.remove("no-overflow");
+          courseSummary.classList.add("summary");
+        } else {
+          courseSummary = document.createElement("div");
+        }
+        ret.courseSummary = courseSummary.outerHTML;
 
         console.log(ret);
 
