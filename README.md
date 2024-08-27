@@ -19,6 +19,7 @@ Other extensions/scripts only support adding and removing courses at `moodle.hku
     > **2024-08-26.04**. This feature has been added.
 - [x] Buttons disappear when switching from `Cards` view to `List` or `Summary` view at `my/courses.php`
     > Currently, you can solve this by switching to `List` or `Summary` view and refresh the website.
+    >
     > **2024-08-26.04**. Fixed. Now can switching between views with buttons displayed.
 
 ## To-do list
@@ -27,8 +28,10 @@ Other extensions/scripts only support adding and removing courses at `moodle.hku
     > **2024-08-26**. Support academic year and course summary (if any).
 - [x] Improve buttons at `my/courses.php`
     > This is partially handle in the **2024-08-26** version. But there's some problem with the css.
-- [ ] Buttons at main page and `search.php`
+- [x] Buttons at main page and `search.php`
     > **2024-08-26**. Added buttons for main page.
+    > 
+    > **2024-08-25.05** Added buttons for search.php
 - [x] Buttons for `Cards` view at `my/courses.php`
     > **2024-08-26.04**. Added.
 - [ ] Code refactor.

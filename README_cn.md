@@ -24,8 +24,10 @@ Course manager for HKU moodle with new design
     > **2024-08-26**. 添加年份、summary（如有）等信息
 - [x] 改进 `/my/courses.php` 的按钮
     > **2024-08-26**. 改进了大小，但是 css 还是有一点问题
-- [ ] 添加**主页**和**`search.php`**的 add/remove 按钮
+- [x] 添加**主页**和**`search.php`**的 add/remove 按钮
     > **2024-08-26**. 为主页添加按钮
+    > 
+    > **2024-08-26.05** 为 search.php 添加按钮
 - [x] 添加 `my/courses.php` 里 `Cards` 视图的按钮
     > **2024-08-26.04**. 已添加
 - [ ] 重构屎山
